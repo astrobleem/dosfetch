@@ -164,6 +164,33 @@ _outtext("'     |  |  |  | |  ||  | `   ||  '--'  /  |  |\n");
 _outtext("'     `--'  `--' `--'`--'  `--'`-------'   `--'\n");
 }
 
+void print_dosbox_logo(void){
+_outtext(" .    .:  ...:..           .:            \n");
+_outtext(" - -::..                         .....:.+\n");
+_outtext(" .--             @@@@@@@               :-\n");
+_outtext(" --: ::  @@@@@@%= .@    @@=*%@@@@ .=%  :+\n");
+_outtext(" .+:       +=.... =@@@@@+  .-+=        =-\n");
+_outtext(" .:. @       =+:. :@.   @@ ==       @  :-\n");
+_outtext(" :=- @*=       =*@@@@@@@@..       =*@  --\n");
+_outtext(" .=. @=**+   .              .   -*=-@  -+\n");
+_outtext("  +. =  .-.        -=#+       ...-+-#  .-\n");
+_outtext(" -*  @@@  @@.     @@  .@@   .=.@@   @@ :-\n");
+_outtext(" .-: #%@   @@ +  @@     @@ +-  #@@     -=\n");
+_outtext(" .=- #%@ . #@ .+ @@     @@ ....   #@@  ..\n");
+_outtext(" .:. -%@  :@- +. .@@   @@  ** @@@.  @@ -=\n");
+_outtext(" :+ @@@@@@% ..      %@%     -#  =@@%+  --\n");
+_outtext(" ::  .    :-       .  .       -*.  .%  -:\n");
+_outtext(" .:. @=*#+   .   @@=   :@@  .   =+::@  :-\n");
+_outtext(" .:. @*+       =  #@- *@@         -+@  .+\n");
+_outtext(" :-. @       -=:.   #@@   -**       @  .:\n");
+
+
+_outtext("  -.       :+-...  -@@@   ..::.        -:\n");
+_outtext(" -=: .   *%#+-..  @@   @@  =*#@@+   +  :+\n");
+_outtext(" :==    :....  . @@- :  @@     ..:    .--\n");
+_outtext(" =:+=----.: .:--.  .....  :-:---::---==:*\n");
+}
+
 void detect_tandy(void) {
     unsigned char far *bios_check = (unsigned char far *)0xFFFF000EL;
     unsigned char far *tandy_check = (unsigned char far *)0xFC000000L;
@@ -200,6 +227,7 @@ unsigned char cmos(unsigned char cmd) {
     outp(0x70, cmd);
     return inp(0x71);
 }
+
 
 // Base memory function
 void base_memory(void) {
@@ -377,7 +405,19 @@ int main(void) {
     _settextwindow(1, 1, 25, 80);
     
     // Print Tandy logo
-    print_tandy_logo();
+    unsigned char far *bios_check = (unsigned char far *)0xFFFF000EL;
+    unsigned char far *tandy_check = (unsigned char far *)0xFC000000L;
+
+    if (*bios_check != 0xFF) {
+print_dosbox_logo();
+    }
+
+
+  if (*tandy_check != 0x21) {
+// print_pcjr_logo ??
+    } else {    print_tandy_logo(); }
+
+
     
     // Move cursor to the right of the logo for system info
     _settextwindow(2, 40, 25, 80);
