@@ -44,7 +44,7 @@ void colorline(const char* s);
 // New function to print Tandy ASCII art
 void print_tandy_logo(void) {
     _settextcolor(YELLOW);
-    _outtext("   _____  ___    _   _  ______  __   __\n");
+    _outtext("   _____  ___    _   _ ______  __   __\n");
     _outtext("  |_   _|/ _ \\  | \\ | ||  _  \\ \\ \\ / /\n");
     _outtext("    | | / /_\\ \\ |  \\| || | | |  \\ V / \n");
     _outtext("    | | |  _  | | . ` || | | |  /   \\ \n");
