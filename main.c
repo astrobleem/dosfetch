@@ -3,6 +3,7 @@
 #include <string.h>
 #include <i86.h>
 #include <graph.h>
+#include <dos.h>
 
 // Color definitions
 #define BLACK 0
@@ -22,6 +23,13 @@
 #define YELLOW 14
 #define WHITE 15
 
+
+// Define the I/O ports for the SN76496
+#define SN76496_PORT_0 0xC0
+#define SN76496_PORT_1 0xC1
+#define SN76496_PORT_2 0xC2
+#define SN76496_PORT_3 0xC3
+
 // Function prototypes
 unsigned char cmos(unsigned char cmd);
 void base_memory(void);
@@ -31,15 +39,41 @@ void dosver(void);
 void floppy(void);
 void fpu(void);
 void colorline(const char* s);
+void detect_tandy(void);
+void detect_cpu(void);
+void detect_cpu_speed(void);
+unsigned long get_ticks(void);
+int detect_sn76496(void);
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <i86.h>
-#include <graph.h>
-#include <dos.h>
 
+// Function to detect SN76496
+int detect_sn76496(void) {
+    unsigned char test_value = 0x55;  // Arbitrary test value
+    unsigned char read_value;
+
+    // Write test value to the SN76496 ports
+    outp(SN76496_PORT_0, test_value);
+    outp(SN76496_PORT_1, test_value);
+    outp(SN76496_PORT_2, test_value);
+    outp(SN76496_PORT_3, test_value);
+
+    // Read back the values
+    read_value = inp(SN76496_PORT_0);
+    if (read_value != test_value) return 0;
+
+    read_value = inp(SN76496_PORT_1);
+    if (read_value != test_value) return 0;
+
+    read_value = inp(SN76496_PORT_2);
+    if (read_value != test_value) return 0;
+
+    read_value = inp(SN76496_PORT_3);
+    if (read_value != test_value) return 0;
+
+    // If all ports return the test value, the chip is likely present
+    return 1;
+}
 
 // New function to print Tandy ASCII art
 void print_tandy_logo(void) {
@@ -52,7 +86,6 @@ void print_tandy_logo(void) {
     _outtext("    \\_/ \\_| |_/ \\_| \\_/|___/   \\/   \\/\n");
     _settextcolor(WHITE);
 }
-
 
 void detect_tandy(void) {
     unsigned char far *bios_check = (unsigned char far *)0xFFFF000EL;
@@ -81,10 +114,8 @@ void detect_tandy(void) {
             return;
         }
     }
-        unsigned char far *model_id = MK_FP(sregs.es, regs.x.bx + 2);
     
     printf("Tandy 1000 series detected\n");
-//    printf("%s",*model_id);
 }
 
 // CMOS function
@@ -194,10 +225,76 @@ void colorline(const char* s) {
     _outtext("\n");
 }
 
+// CPU detection function
+void detect_cpu(void) {
+    union REGS regs;
+    regs.h.ah = 0x00;  // CPU identification function
+    int86(0x11, &regs, &regs);
+
+    switch (regs.h.al) {
+        case 0x00:
+            printf("Intel 8088 or NEC V20\n");
+            break;
+        case 0x01:
+            printf("Intel 8086\n");
+            break;
+        case 0x02:
+            printf("Intel 80286\n");
+            break;
+        case 0x03:
+            printf("Intel 386\n");
+            break;
+        case 0x04:
+            printf("Intel 486\n");
+            break;
+        case 0x05:
+            printf("Pentium\n");
+            break;
+        case 0x06:
+            printf("Pentium Pro\n");
+            break;
+        default:
+            printf("Unknown CPU\n");
+            break;
+    }
+}
+
+// CPU speed detection function
+void detect_cpu_speed(void) {
+    unsigned long start_ticks, end_ticks, elapsed_ticks;
+    unsigned int delay_count = 0;
+    unsigned long ticks_per_sec = 18.2065; // DOS timer ticks per second
+
+    // Get the initial tick count
+    start_ticks = get_ticks();
+
+    // Delay loop for approximately 1 second
+    while (get_ticks() - start_ticks < ticks_per_sec) {
+        delay_count++;
+    }
+
+    // Get the final tick count
+    end_ticks = get_ticks();
+
+    // Calculate elapsed ticks
+    elapsed_ticks = end_ticks - start_ticks;
+
+    // Calculate CPU speed in MHz
+    unsigned long speed = delay_count / elapsed_ticks;
+    printf("%lu MHz\n", speed);
+}
+
+// Get system ticks since startup
+unsigned long get_ticks(void) {
+    union REGS regs;
+    regs.h.ah = 0x00;
+    int86(0x1A, &regs, &regs);
+    return (((unsigned long)regs.x.cx << 16) | regs.x.dx);
+}
+
 // Main function
 int main(void) {
-
-_clearscreen(_GCLEARSCREEN);
+    _clearscreen(_GCLEARSCREEN);
     _settextwindow(1, 1, 25, 80);
     
     // Print Tandy logo
@@ -214,9 +311,15 @@ _clearscreen(_GCLEARSCREEN);
     _outtext("\nExt. Memory: "); extended_memory();
     _outtext("\nFloating Point Unit: "); fpu();
     _outtext("\nComputer Type: "); detect_tandy();
+    _outtext("\nCPU Type: "); detect_cpu();
+    _outtext("\nCPU Speed: "); detect_cpu_speed();
+ if (detect_sn76496()) {
+        _outtext("\nTexas Instruments SN76496 Sound Chip detected.\n");
+    } else {
+        _outtext("\nSN76496 Sound Chip not detected.\n");
+    }
     
     _settextwindow(9, 1, 25, 80);  // Reset text window
     _outtext("\n");
     return 0;
-
 }
