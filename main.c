@@ -5,11 +5,22 @@
 #include <graph.h>
 
 // Color definitions
-#define YELLOW 14
-#define LIGHTBLUE 9
-#define LIGHTRED 12
-#define WHITE 15
+#define BLACK 0
+#define BLUE 1
+#define GREEN 2
+#define CYAN 3
+#define RED 4
+#define MAGENTA 5
+#define BROWN 6
 #define LIGHTGRAY 7
+#define LIGHTBLACK 8
+#define LIGHTBLUE 9
+#define LIGHTGREEN 10
+#define LIGHTCYAN 11
+#define LIGHTRED 12
+#define LIGHTMAGENTA 13
+#define YELLOW 14
+#define WHITE 15
 
 // Function prototypes
 unsigned char cmos(unsigned char cmd);
@@ -32,14 +43,14 @@ void colorline(const char* s);
 
 // New function to print Tandy ASCII art
 void print_tandy_logo(void) {
-    _setcolor(YELLOW);
+    _settextcolor(YELLOW);
     _outtext("   _____  ___    _   _  ______  __   __\n");
     _outtext("  |_   _|/ _ \\  | \\ | ||  _  \\ \\ \\ / /\n");
     _outtext("    | | / /_\\ \\ |  \\| || | | |  \\ V / \n");
     _outtext("    | | |  _  | | . ` || | | |  /   \\ \n");
     _outtext("    | | | | | | | |\\  || |/ /  / /^\\ \\\n");
-    _outtext("    \\_/ \\_| |_/ \\_| \\_/|___/  \\/   \\/\n");
-    _setcolor(WHITE);
+    _outtext("    \\_/ \\_| |_/ \\_| \\_/|___/   \\/   \\/\n");
+    _settextcolor(WHITE);
 }
 
 
@@ -70,8 +81,10 @@ void detect_tandy(void) {
             return;
         }
     }
+        unsigned char far *model_id = MK_FP(sregs.es, regs.x.bx + 2);
     
-    printf("Tandy 1000 series (not SL/TL) detected\n");
+    printf("Tandy 1000 series detected\n");
+//    printf("%s",*model_id);
 }
 
 // CMOS function
@@ -183,22 +196,6 @@ void colorline(const char* s) {
 
 // Main function
 int main(void) {
-/*
-    _clearscreen(_GCLEARSCREEN);
-    printf("\n");
-    _settextwindow(2, 2, 25, 80);
-
-    _setcolor(WHITE); _outtext("OS: ");dosver();
-    _setcolor(WHITE); _outtext("\nShell: ");  printf("%s\n", getenv("COMSPEC"));
-    _setcolor(WHITE); _outtext("\nFloppy drives: ");  floppy();
-    _setcolor(WHITE); _outtext("\nDisk: ");  disksize(0);
-    _setcolor(WHITE); _outtext("\nBase Memory: ");  base_memory();
-    _setcolor(WHITE); _outtext("\nExt. Memory: "); extended_memory();
-    _setcolor(WHITE); _outtext("\nFloating Point Unit: ");  fpu();
-    _setcolor(WHITE); _outtext("\nComputer Type: "); detect_tandy();
-    printf("\n");
-
-    return 0; */
 
 _clearscreen(_GCLEARSCREEN);
     _settextwindow(1, 1, 25, 80);
@@ -210,7 +207,7 @@ _clearscreen(_GCLEARSCREEN);
     _settextwindow(2, 40, 25, 80);
     
     _outtext("OS: "); dosver();
-    _outtext("\nShell: "); printf("%s", getenv("COMSPEC"));
+    _outtext("\nShell: "); printf("%s\n", getenv("COMSPEC"));
     _outtext("\nFloppy drives: "); floppy();
     _outtext("\nDisk: "); disksize(0);
     _outtext("\nBase Memory: "); base_memory();
@@ -218,7 +215,7 @@ _clearscreen(_GCLEARSCREEN);
     _outtext("\nFloating Point Unit: "); fpu();
     _outtext("\nComputer Type: "); detect_tandy();
     
-    _settextwindow(1, 1, 25, 80);  // Reset text window
+    _settextwindow(9, 1, 25, 80);  // Reset text window
     _outtext("\n");
     return 0;
 
