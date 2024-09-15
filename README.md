@@ -11,6 +11,9 @@ Joseph A. Albrecht's GRAFIX.ASM
 This version supports identifying Tandy 1000 Machines. 
 for SepTandy the celebration of all things Tandy during the month of september.
 
+Pull requests are welcome.
+This is built using OpenWatcom 1.9 
+
 
 ![image](https://github.com/user-attachments/assets/bf9bc351-fbba-48cd-8400-fd4231798745)
 
