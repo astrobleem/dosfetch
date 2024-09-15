@@ -12,7 +12,8 @@ This version supports identifying Tandy 1000 Machines.
 for SepTandy the celebration of all things Tandy during the month of september.
 
 
+![image](https://github.com/user-attachments/assets/bf9bc351-fbba-48cd-8400-fd4231798745)
 
-![image](https://github.com/user-attachments/assets/d95faba4-3bc9-4ef6-8bb8-8136481168e4)
+
 
 ![image](https://github.com/user-attachments/assets/9cfceb71-4f2b-4a09-adf6-01eed93f4e96)
