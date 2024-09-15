@@ -23,12 +23,22 @@
 #define YELLOW 14
 #define WHITE 15
 
+// Define the I/O ports for the 8253 Timer
+#define TIMER_CONTROL_PORT 0x43
+#define TIMER_COUNTER_0 0x40
+#define TIMER_COUNTER_1 0x41
+#define TIMER_COUNTER_2 0x42
 
 // Define the I/O ports for the SN76496
 #define SN76496_PORT_0 0xC0
 #define SN76496_PORT_1 0xC1
 #define SN76496_PORT_2 0xC2
 #define SN76496_PORT_3 0xC3
+#define SN76496_PORT_4 0xC4
+#define SN76496_PORT_5 0xC5
+#define SN76496_PORT_6 0xC6
+#define SN76496_PORT_7 0xC7
+
 
 // Function prototypes
 unsigned char cmos(unsigned char cmd);
@@ -44,7 +54,33 @@ void detect_cpu(void);
 void detect_cpu_speed(void);
 unsigned long get_ticks(void);
 int detect_sn76496(void);
+int detect_8253_timer(void);
 
+int detect_8253_timer(void) {
+    unsigned char test_value = 0x36;  // Arbitrary test value for control register
+    unsigned char read_value;
+
+    // Write test value to the Timer Control port
+    outp(TIMER_CONTROL_PORT, test_value);
+
+    // Write and read back from Timer Counter 0
+    outp(TIMER_COUNTER_0, 0xFF);
+    read_value = inp(TIMER_COUNTER_0);
+    if (read_value != 0xFF) return 0;
+
+    // Write and read back from Timer Counter 1
+    outp(TIMER_COUNTER_1, 0xFF);
+    read_value = inp(TIMER_COUNTER_1);
+    if (read_value != 0xFF) return 0;
+
+    // Write and read back from Timer Counter 2
+    outp(TIMER_COUNTER_2, 0xFF);
+    read_value = inp(TIMER_COUNTER_2);
+    if (read_value != 0xFF) return 0;
+
+    // If all ports return the test value, the chip is likely present
+    return 1;
+}
 
 
 // Function to detect SN76496
@@ -54,23 +90,35 @@ int detect_sn76496(void) {
 
     // Write test value to the SN76496 ports
     outp(SN76496_PORT_0, test_value);
-    outp(SN76496_PORT_1, test_value);
+//    outp(SN76496_PORT_1, test_value);
     outp(SN76496_PORT_2, test_value);
-    outp(SN76496_PORT_3, test_value);
+//    outp(SN76496_PORT_3, test_value);
+    outp(SN76496_PORT_4, test_value);
+    outp(SN76496_PORT_5, test_value);
+    outp(SN76496_PORT_6, test_value);
+    outp(SN76496_PORT_7, test_value);
+
+
 
     // Read back the values
     read_value = inp(SN76496_PORT_0);
-    if (read_value != test_value) return 0;
+    if (read_value != test_value)// return 0;
+{printf("0 %s",read_value); return 0;}
 
-    read_value = inp(SN76496_PORT_1);
-    if (read_value != test_value) return 0;
-
+/*    read_value = inp(SN76496_PORT_1);
+    if (read_value != test_value)// return 0;
+{printf("1 %s",read_value); return 0;}
+*/
     read_value = inp(SN76496_PORT_2);
-    if (read_value != test_value) return 0;
+    if (read_value != test_value)// return 0;
+{printf("2 %s",read_value); return 0;}
 
-    read_value = inp(SN76496_PORT_3);
-    if (read_value != test_value) return 0;
+    read_value = inp(SN76496_PORT_4);
+    if (read_value != test_value)// return 0;
+{printf("4 %s",read_value); return 0;} 
 
+
+//printf("any %s", read_value);
     // If all ports return the test value, the chip is likely present
     return 1;
 }
@@ -84,7 +132,36 @@ void print_tandy_logo(void) {
     _outtext("    | | |  _  | | . ` || | | |  /   \\ \n");
     _outtext("    | | | | | | | |\\  || |/ /  / /^\\ \\\n");
     _outtext("    \\_/ \\_| |_/ \\_| \\_/|___/   \\/   \\/\n");
+
+_setbkcolor(BLACK);
+    _outtext("         ");
+
+
+_setbkcolor(LIGHTRED);
+_outtext("     ");
+_setbkcolor(BLACK);
+_outtext("   ");
+
+_setbkcolor(LIGHTGREEN);
+_outtext("     ");
+_setbkcolor(BLACK);
+_outtext("   ");
+
+_setbkcolor(LIGHTBLUE);
+_outtext("     \n");
+
+_setbkcolor(BLACK);
+
     _settextcolor(WHITE);
+}
+
+void print_tandy_logo2(void){
+
+_outtext(" ,--------. ,---.  ,--.  ,--.,------.,--.   ,--.\n");
+_outtext("'  '--.  .--'/  O  \\ |  ,'.|  ||  .-.  \\\  `.'  /\n");
+_outtext("'     |  |  |  .-.  ||  |' '  ||  |  \  :'.    /\n");
+_outtext("'     |  |  |  | |  ||  | `   ||  '--'  /  |  |\n");
+_outtext("'     `--'  `--' `--'`--'  `--'`-------'   `--'\n");
 }
 
 void detect_tandy(void) {
@@ -264,7 +341,7 @@ void detect_cpu_speed(void) {
     unsigned long start_ticks, end_ticks, elapsed_ticks;
     unsigned int delay_count = 0;
     unsigned long ticks_per_sec = 18.2065; // DOS timer ticks per second
-
+/*
     // Get the initial tick count
     start_ticks = get_ticks();
 
@@ -282,6 +359,8 @@ void detect_cpu_speed(void) {
     // Calculate CPU speed in MHz
     unsigned long speed = delay_count / elapsed_ticks;
     printf("%lu MHz\n", speed);
+*/
+printf("0 Mhz\n");
 }
 
 // Get system ticks since startup
@@ -313,12 +392,19 @@ int main(void) {
     _outtext("\nComputer Type: "); detect_tandy();
     _outtext("\nCPU Type: "); detect_cpu();
     _outtext("\nCPU Speed: "); detect_cpu_speed();
+
  if (detect_sn76496()) {
-        _outtext("\nTexas Instruments SN76496 Sound Chip detected.\n");
+        _outtext("\nTexas Instruments SN76496 Sound Chip.");
     } else {
-        _outtext("\nSN76496 Sound Chip not detected.\n");
+        _outtext("\nSN76496 Sound Chip not detected.");
     }
     
+
+ if (detect_8253_timer()) {
+        _outtext("\nIntel 8253 Timer Chip detected.\n");
+    } else {
+        _outtext("\n8253 Timer Chip not detected.\n");
+    }
     _settextwindow(9, 1, 25, 80);  // Reset text window
     _outtext("\n");
     return 0;
