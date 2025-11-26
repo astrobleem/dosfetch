@@ -7,14 +7,14 @@ CFLAGS=-q -0 -za99 -aa -wx -ox -oh
 
 all: neofetch.exe
 
-neofetch.exe: main.o
+neofetch.exe: main.obj
 	wlink system dos file main name neofetch
 
-main.o: main.c inline.h
+main.obj: main.c
 	$(CC) $(CFLAGS) main.c
 
 clean:
-	rm -f main.o neofetch.exe
+	rm -f main.obj neofetch.exe
 
 install: neofetch.exe
 	cp neofetch.exe /media/1TB

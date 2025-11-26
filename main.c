@@ -50,11 +50,18 @@ void floppy(void);
 void fpu(void);
 void colorline(const char* s);
 void detect_tandy(void);
+void detect_tandy_mode(void);
 void detect_cpu(void);
 void detect_cpu_speed(void);
 unsigned long get_ticks(void);
 int detect_sn76496(void);
 int detect_8253_timer(void);
+void print_color_bars(void);
+void sn_set_tone(int channel, unsigned int period);
+void sn_set_volume(int channel, unsigned int vol4);
+void wait_ticks(unsigned int ticks);
+void play_startup_sound(void);
+unsigned int freq_to_period(unsigned int freq_hz);
 
 int detect_8253_timer(void) {
     unsigned char test_value = 0x36;  // Arbitrary test value for control register
@@ -83,44 +90,106 @@ int detect_8253_timer(void) {
 }
 
 
-// Function to detect SN76496
+// PSG Sound Functions (based on psgtest.c)
+// Set tone: period is 10-bit (1..1023), channel 0-2
+void sn_set_tone(int channel, unsigned int period) {
+    unsigned char latch = 0x80 | ((channel & 3) << 5) | (period & 0x0F);
+    unsigned char data = (unsigned char)((period >> 4) & 0x3F);
+    outp(SN76496_PORT_0, latch);
+    outp(SN76496_PORT_0, data);
+}
+
+// Set volume: vol4 0=loudest, 15=silent
+void sn_set_volume(int channel, unsigned int vol4) {
+    outp(SN76496_PORT_0, 0x90 | ((channel & 3) << 5) | (vol4 & 0x0F));
+}
+
+// Wait for BIOS ticks (~18.2 Hz, ~55ms per tick)
+void wait_ticks(unsigned int ticks) {
+    unsigned long start = get_ticks();
+    while ((get_ticks() - start) < ticks) {
+        /* spin */
+    }
+}
+
+// Convert frequency to PSG period
+// SN76496: fout = CLK / (32 * period)
+// NTSC clock ~3.579545 MHz
+unsigned int freq_to_period(unsigned int freq_hz) {
+    unsigned long n;
+    if (freq_hz == 0) return 1023;
+    n = (3579545UL / 32UL) / (unsigned long)freq_hz;
+    if (n < 1) n = 1;
+    if (n > 1023) n = 1023;
+    return (unsigned int)n;
+}
+
+// Play C major triad arpeggio + noise tick (from psgtest.c)
+void play_startup_sound(void) {
+    unsigned int v;
+    
+    // Start silent
+    sn_set_volume(0, 15);
+    sn_set_volume(1, 15);
+    sn_set_volume(2, 15);
+    
+    // Simple arpeggio on channels 0..2 (C4, E4, G4)
+    sn_set_tone(0, freq_to_period(262));  // C4
+    sn_set_volume(0, 4);
+    wait_ticks(4);  // ~220ms
+    
+    sn_set_tone(1, freq_to_period(330));  // E4
+    sn_set_volume(1, 4);
+    wait_ticks(4);  // ~220ms
+    
+    sn_set_tone(2, freq_to_period(392));  // G4
+    sn_set_volume(2, 4);
+    wait_ticks(7);  // ~385ms
+    
+    // Hold the triad briefly
+    wait_ticks(5);  // ~275ms
+    
+    // Quick noise tick
+    outp(SN76496_PORT_0, 0xE0 | 0x05);  // low-rate white noise
+    sn_set_volume(3, 6);  // noise channel volume
+    wait_ticks(2);  // ~110ms
+    sn_set_volume(3, 15);  // silence noise
+    
+    // Fade out
+    for (v = 4; v <= 15; v++) {
+        sn_set_volume(0, v);
+        sn_set_volume(1, v);
+        sn_set_volume(2, v);
+        wait_ticks(1);  // ~55ms per step
+    }
+    
+    // All silent
+    sn_set_volume(0, 15);
+    sn_set_volume(1, 15);
+    sn_set_volume(2, 15);
+}
+
+// Improved SN76496 detection
 int detect_sn76496(void) {
-    unsigned char test_value = 0x55;  // Arbitrary test value
-    unsigned char read_value;
-
-    // Write test value to the SN76496 ports
-    outp(SN76496_PORT_0, test_value);
-//    outp(SN76496_PORT_1, test_value);
-    outp(SN76496_PORT_2, test_value);
-//    outp(SN76496_PORT_3, test_value);
-    outp(SN76496_PORT_4, test_value);
-    outp(SN76496_PORT_5, test_value);
-    outp(SN76496_PORT_6, test_value);
-    outp(SN76496_PORT_7, test_value);
-
-
-
-    // Read back the values
-    read_value = inp(SN76496_PORT_0);
-    if (read_value != test_value)// return 0;
-{printf("0 %s",read_value); return 0;}
-
-/*    read_value = inp(SN76496_PORT_1);
-    if (read_value != test_value)// return 0;
-{printf("1 %s",read_value); return 0;}
-*/
-    read_value = inp(SN76496_PORT_2);
-    if (read_value != test_value)// return 0;
-{printf("2 %s",read_value); return 0;}
-
-    read_value = inp(SN76496_PORT_4);
-    if (read_value != test_value)// return 0;
-{printf("4 %s",read_value); return 0;} 
-
-
-//printf("any %s", read_value);
-    // If all ports return the test value, the chip is likely present
-    return 1;
+    unsigned char saved_port;
+    int detected = 0;
+    
+    // Try to silence all channels first
+    sn_set_volume(0, 15);
+    sn_set_volume(1, 15);
+    sn_set_volume(2, 15);
+    sn_set_volume(3, 15);
+    
+    // The PSG is write-only, so we can't read back
+    // Instead, check if we're on a Tandy machine
+    // PSG is only present on Tandy 1000 series
+    unsigned char far *tandy_check = (unsigned char far *)0xFC000000L;
+    
+    if (*tandy_check == 0x21) {
+        detected = 1;  // Likely has PSG
+    }
+    
+    return detected;
 }
 
 // New function to print Tandy ASCII art
@@ -164,34 +233,57 @@ _outtext("'     |  |  |  | |  ||  | `   ||  '--'  /  |  |\n");
 _outtext("'     `--'  `--' `--'`--'  `--'`-------'   `--'\n");
 }
 
+
 void print_dosbox_logo(void){
-_outtext(" .    .:  ...:..           .:            \n");
-_outtext(" - -::..                         .....:.+\n");
-_outtext(" .--             @@@@@@@               :-\n");
-_outtext(" --: ::  @@@@@@%= .@    @@=*%@@@@ .=%  :+\n");
-_outtext(" .+:       +=.... =@@@@@+  .-+=        =-\n");
-_outtext(" .:. @       =+:. :@.   @@ ==       @  :-\n");
-_outtext(" :=- @*=       =*@@@@@@@@..       =*@  --\n");
-_outtext(" .=. @=**+   .              .   -*=-@  -+\n");
-_outtext("  +. =  .-.        -=#+       ...-+-#  .-\n");
-_outtext(" -*  @@@  @@.     @@  .@@   .=.@@   @@ :-\n");
-_outtext(" .-: #%@   @@ +  @@     @@ +-  #@@     -=\n");
-_outtext(" .=- #%@ . #@ .+ @@     @@ ....   #@@  ..\n");
-_outtext(" .:. -%@  :@- +. .@@   @@  ** @@@.  @@ -=\n");
-_outtext(" :+ @@@@@@% ..      %@%     -#  =@@%+  --\n");
-_outtext(" ::  .    :-       .  .       -*.  .%  -:\n");
-_outtext(" .:. @=*#+   .   @@=   :@@  .   =+::@  :-\n");
-_outtext(" .:. @*+       =  #@- *@@         -+@  .+\n");
-_outtext(" :-. @       -=:.   #@@   -**       @  .:\n");
-
-
-_outtext("  -.       :+-...  -@@@   ..::.        -:\n");
-_outtext(" -=: .   *%#+-..  @@   @@  =*#@@+   +  :+\n");
-_outtext(" :==    :....  . @@- :  @@     ..:    .--\n");
-_outtext(" =:+=----.: .:--.  .....  :-:---::---==:*\n");
+    _settextcolor(LIGHTCYAN);
+    _outtext("  ___   __  ____\n");
+    _outtext(" |   \\ /  \\/ ___|\n");
+    _outtext(" | |\\ |  . \___ \\\n");
+    _outtext(" |___/ \\__/\\____/\n");
+    _settextcolor(YELLOW);
+    _outtext("   fetch");
+    _settextcolor(LIGHTGRAY);
+    _outtext("\n\n");
+    
+    // Color indicator blocks
+    _setbkcolor(BLUE); _outtext(" "); 
+    _setbkcolor(GREEN); _outtext(" ");
+    _setbkcolor(CYAN); _outtext(" ");
+    _setbkcolor(RED); _outtext(" ");
+    _setbkcolor(MAGENTA); _outtext(" ");
+    _setbkcolor(YELLOW); _outtext(" ");
+    _setbkcolor(BLACK);
+    _outtext("  for MS-DOS\n\n");
+    _settextcolor(WHITE);
 }
 
 void detect_tandy(void) {
+    union REGS regs;
+    struct SREGS sregs;
+    
+    // Use INT 10h AH=1Ah - the proper BIOS detection method
+    // This is what the Windows driver uses - much more reliable!
+    regs.w.ax = 0x1A00;
+    int86(0x10, &regs, &regs);
+    
+    if (regs.h.bl == 0xFF) {
+        printf("Tandy 1000/PCjr Graphics Adapter detected\n");
+        
+        // Check for specific Tandy 1000 SL/TL models using INT 15h AH=C0h
+        regs.h.ah = 0xC0;
+        int86x(0x15, &regs, &regs, &sregs);
+        
+        if (!regs.x.cflag) {
+            unsigned char far *model_id = MK_FP(sregs.es, regs.x.bx + 2);
+            if (*model_id == 0xFF) {
+                printf("  (Tandy 1000 SL/TL variant)\n");
+                return;
+            }
+        }
+        return;
+    }
+    
+    // Fallback: Check BIOS ROM markers (less reliable)
     unsigned char far *bios_check = (unsigned char far *)0xFFFF000EL;
     unsigned char far *tandy_check = (unsigned char far *)0xFC000000L;
     
@@ -200,26 +292,57 @@ void detect_tandy(void) {
         return;
     }
     
-    if (*tandy_check != 0x21) {
-        printf("Not a Tandy 1000 series\n");
+    if (*tandy_check == 0x21) {
+        printf("Tandy 1000 series (ROM check)\n");
         return;
     }
     
-    // Check for Tandy 1000 SL/TL
+    printf("Non-Tandy system\n");
+}
+
+// Detect current Tandy video mode
+void detect_tandy_mode(void) {
     union REGS regs;
-    struct SREGS sregs;
-    regs.h.ah = 0xC0;
-    int86x(0x15, &regs, &regs, &sregs);
     
-    if (!regs.x.cflag) {
-        unsigned char far *model_id = MK_FP(sregs.es, regs.x.bx + 2);
-        if (*model_id == 0xFF) {
-            printf("Tandy 1000 SL/TL detected\n");
-            return;
-        }
+    // Get current video mode using INT 10h AH=0Fh
+    regs.h.ah = 0x0F;
+    int86(0x10, &regs, &regs);
+    
+    switch (regs.h.al) {
+        case 0x00:
+            printf("40x25 Text (Mode 0)\n");
+            break;
+        case 0x01:
+            printf("40x25 Color Text (Mode 1)\n");
+            break;
+        case 0x02:
+            printf("80x25 Text (Mode 2)\n");
+            break;
+        case 0x03:
+            printf("80x25 Color Text (Mode 3)\n");
+            break;
+        case 0x04:
+            printf("320x200 4-color Graphics (Mode 4/CGA)\n");
+            break;
+        case 0x05:
+            printf("320x200 4-color Graphics BW (Mode 5)\n");
+            break;
+        case 0x06:
+            printf("640x200 2-color Graphics (Mode 6/CGA)\n");
+            break;
+        case 0x08:
+            printf("160x200 16-color Graphics (Mode 8/PCjr)\n");
+            break;
+        case 0x09:
+            printf("320x200 16-color Graphics (Mode 9/Tandy)\n");
+            break;
+        case 0x0A:
+            printf("640x200 4-color Graphics (Mode A/Tandy)\n");
+            break;
+        default:
+            printf("Unknown Mode 0x%02X\n", regs.h.al);
+            break;
     }
-    
-    printf("Tandy 1000 series detected\n");
 }
 
 // CMOS function
@@ -330,37 +453,135 @@ void colorline(const char* s) {
     _outtext("\n");
 }
 
-// CPU detection function
-void detect_cpu(void) {
-    union REGS regs;
-    regs.h.ah = 0x00;  // CPU identification function
-    int86(0x11, &regs, &regs);
+// Print color palette bars (classic neofetch style)
+void print_color_bars(void) {
+    int i;
+    
+    // First row: Dark/normal colors (0-7)
+    for (i = 0; i < 8; i++) {
+        _setbkcolor(i);
+        _outtext("   ");  // 3 spaces per color block
+    }
+    _setbkcolor(BLACK);  // Reset background
+    _outtext("\n");
+    
+    // Second row: Bright colors (8-15)
+    for (i = 8; i < 16; i++) {
+        _setbkcolor(i);
+        _outtext("   ");  // 3 spaces per color block
+    }
+    _setbkcolor(BLACK);  // Reset background
+    _outtext("\n");
+}
 
-    switch (regs.h.al) {
-        case 0x00:
-            printf("Intel 8088 or NEC V20\n");
-            break;
-        case 0x01:
-            printf("Intel 8086\n");
-            break;
-        case 0x02:
-            printf("Intel 80286\n");
-            break;
-        case 0x03:
-            printf("Intel 386\n");
-            break;
-        case 0x04:
-            printf("Intel 486\n");
-            break;
-        case 0x05:
-            printf("Pentium\n");
-            break;
-        case 0x06:
-            printf("Pentium Pro\n");
-            break;
-        default:
-            printf("Unknown CPU\n");
-            break;
+// Detect if CPU is NEC V20/V30 vs Intel 8088/8086
+// Uses the FLAGS register behavior difference
+int detect_nec_cpu(void) {
+    unsigned int flags1, flags2;
+    
+    // NEC and Intel handle the MUL instruction differently for flags
+    // This uses a documented difference in flag behavior
+    _asm {
+        pushf                   ; Save original flags
+        push ax
+        push bx
+        
+        mov al, 0FFh           ; Set AL to 0xFF
+        mov bl, 02h            ; Set BL to 0x02  
+        mul bl                 ; Multiply AL * BL
+        lahf                   ; Load flags into AH
+        mov flags1, ax         ; Save result
+        
+        ; On Intel: OF and CF are undefined after MUL
+        ; On NEC: OF and CF are cleared
+        
+        pop bx
+        pop ax
+        popf                   ; Restore flags
+    }
+    
+    // Check if overflow flag behavior indicates NEC
+    // This is a simplified check
+    return 0; // For now, return Intel (we'll refine this)
+}
+
+// CPU detection function - determines CPU type
+void detect_cpu(void) {
+    unsigned int cpu_type = 0;
+    unsigned int is_nec = 0;
+    
+    // Detect CPU type using FLAGS register manipulation
+    _asm {
+        pushf                   ; Save flags
+        pop ax                 ; Get flags into AX
+        mov bx, ax             ; Save copy
+        and ax, 0FFFh          ; Try to clear bits 12-15
+        push ax
+        popf                   ; Put back into flags
+        pushf
+        pop ax                 ; Get flags again
+        and ax, 0F000h         ; Check if bits 12-15 are set
+        cmp ax, 0F000h         ; If set, it's 8086/8088 (bits stuck high)
+        je cpu_8086
+        
+        push bx                ; Restore original flags
+        popf
+        
+        ; Try to set bits 12-15
+        or bx, 0F000h
+        push bx
+        popf
+        pushf
+        pop ax
+        and ax, 0F000h
+        jz cpu_286             ; If cleared, it's 80286 (bits stuck low)
+        
+        ; If bits are changeable, it's 386+
+        mov cpu_type, 3
+        jmp cpu_done
+        
+    cpu_286:
+        mov cpu_type, 2
+        jmp cpu_done
+        
+    cpu_8086:
+        mov cpu_type, 1
+        
+    cpu_done:
+        nop
+    }
+    
+    // Display CPU type
+    if (cpu_type == 1) {
+        // For 8086/8088, try to detect NEC
+        // Use the SALC instruction (D6h) - behaves differently
+        _asm {
+            push ax
+            push bx
+            xor al, al          ; Clear AL
+            stc                 ; Set carry flag
+            db 0D6h             ; SALC on 8088, different on NEC
+            mov bl, al          ; Save result
+            pop bx  
+            cmp bl, 0FFh        ; On Intel, AL = FFh; on NEC it may differ
+            pop ax
+            je is_intel
+            mov is_nec, 1
+        is_intel:
+            nop
+        }
+        
+        if (is_nec) {
+            printf("NEC V20/V30\n");
+        } else {
+            printf("Intel 8088/8086\n");
+        }
+    } else if (cpu_type == 2) {
+        printf("Intel 80286\n");
+    } else if (cpu_type == 3) {
+        printf("Intel 386+\n");
+    } else {
+        printf("Unknown CPU\n");
     }
 }
 
@@ -430,11 +651,13 @@ print_dosbox_logo();
     _outtext("\nExt. Memory: "); extended_memory();
     _outtext("\nFloating Point Unit: "); fpu();
     _outtext("\nComputer Type: "); detect_tandy();
+    _outtext("\nVideo Mode: "); detect_tandy_mode();
     _outtext("\nCPU Type: "); detect_cpu();
     _outtext("\nCPU Speed: "); detect_cpu_speed();
 
  if (detect_sn76496()) {
         _outtext("\nTexas Instruments SN76496 Sound Chip.");
+        play_startup_sound();  // Play a quick beep!
     } else {
         _outtext("\nSN76496 Sound Chip not detected.");
     }
@@ -447,5 +670,9 @@ print_dosbox_logo();
     }
     _settextwindow(9, 1, 25, 80);  // Reset text window
     _outtext("\n");
+    
+    // Display color palette bars
+    print_color_bars();
+    
     return 0;
 }
