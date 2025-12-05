@@ -1,0 +1,23 @@
+neofetch.exe(1): Warning! W132: No storage class or type specified
+neofetch.exe(1): Error! E1009: Expecting ';' but found 'Ö'
+neofetch.exe(1): Error! E1061: Expecting data or function declaration, but found ' '
+neofetch.exe(1): Error! E1026: Invalid declarator
+neofetch.exe(1): Error! E1009: Expecting ';' but found ''
+neofetch.exe(1): Error! E1061: Expecting data or function declaration, but found ' '
+neofetch.exe(1): Warning! W132: No storage class or type specified
+neofetch.exe(1): Error! E1009: Expecting ';' but found ''
+neofetch.exe(1): Error! E1061: Expecting data or function declaration, but found ' '
+neofetch.exe(1): Error! E1026: Invalid declarator
+neofetch.exe(1): Error! E1009: Expecting ';' but found '!'
+neofetch.exe(1): Error! E1061: Expecting data or function declaration, but found '!'
+neofetch.exe(1): Error! E1026: Invalid declarator
+neofetch.exe(1): Error! E1009: Expecting ';' but found ''
+neofetch.exe(1): Error! E1061: Expecting data or function declaration, but found ' '
+neofetch.exe(1): Error! E1026: Invalid declarator
+neofetch.exe(1): Error! E1009: Expecting ';' but found ''
+neofetch.exe(1): Error! E1061: Expecting data or function declaration, but found ' '
+neofetch.exe(1): Error! E1026: Invalid declarator
+neofetch.exe(1): Error! E1009: Expecting ';' but found '™'
+neofetch.exe(1): Error! E1061: Expecting data or function declaration, but found ' '
+neofetch.exe(1): Error! E1026: Invalid declarator
+neofetch.exe(1): Error! E1147: Too many errors: compilation aborted

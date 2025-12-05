@@ -1,0 +1,17 @@
+copyfile.bat(1): Error! E1022: Missing or misspelled data type near 'copy'
+copyfile.bat(1): Warning! W132: No storage class or type specified
+copyfile.bat(1): Error! E1009: Expecting ';' but found '.'
+copyfile.bat(1): Error! E1061: Expecting data or function declaration, but found '.'
+copyfile.bat(1): Error! E1022: Missing or misspelled data type near 'exe'
+copyfile.bat(1): Warning! W132: No storage class or type specified
+copyfile.bat(1): Error! E1009: Expecting ';' but found ':'
+copyfile.bat(1): Error! E1061: Expecting data or function declaration, but found ':'
+copyfile.bat(1): Error! E1026: Invalid declarator
+copyfile.bat(1): Error! E1009: Expecting ';' but found '\'
+copyfile.bat(1): Error! E1061: Expecting data or function declaration, but found ' '
+copyfile.bat(1): Warning! W132: No storage class or type specified
+copyfile.bat(1): Error! E1009: Expecting ';' but found '/'
+copyfile.bat(1): Error! E1061: Expecting data or function declaration, but found '/'
+copyfile.bat(1): Warning! W138: No newline at end of file
+copyfile.bat(2): Warning! W132: No storage class or type specified
+copyfile.bat(2): Error! E1171: Expecting ';' but found end of file

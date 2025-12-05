@@ -1,0 +1,17 @@
+README.md(1): Error! E1048: Unknown preprocessing directive '#DOSfetch'
+README.md(3): Warning! W132: No storage class or type specified
+README.md(3): Error! E1009: Expecting ';' but found 'for'
+README.md(3): Error! E1099: Statement must be inside function. Probable cause: missing {
+README.md(7): Error! E1048: Unknown preprocessing directive '##'
+README.md(18): Error! E1048: Unknown preprocessing directive '##'
+README.md(20): Error! E1048: Unknown preprocessing directive '###'
+README.md(28): Error! E1048: Unknown preprocessing directive '###'
+README.md(34): Error! E1048: Unknown preprocessing directive '###'
+README.md(42): Error! E1048: Unknown preprocessing directive '##'
+README.md(52): Error! E1048: Unknown preprocessing directive '##'
+README.md(61): Error! E1048: Unknown preprocessing directive '##'
+README.md(63): Error! E1048: Unknown preprocessing directive '###'
+README.md(71): Error! E1048: Unknown preprocessing directive '###'
+README.md(78): Error! E1048: Unknown preprocessing directive '##'
+README.md(85): Error! E1048: Unknown preprocessing directive '##'
+README.md(93): Error! E1048: Unknown preprocessing directive '##'

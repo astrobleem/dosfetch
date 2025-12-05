@@ -1,0 +1,1 @@
+copy dosfetch.exe e:\tandybox /y

@@ -1,0 +1,23 @@
+__wcl__.lnk(1): Error! E1022: Missing or misspelled data type near 'option'
+__wcl__.lnk(2): Error! E1022: Missing or misspelled data type near 'quiet'
+__wcl__.lnk(2): Error! E1022: Missing or misspelled data type near 'system'
+__wcl__.lnk(3): Error! E1022: Missing or misspelled data type near 'dos'
+__wcl__.lnk(3): Error! E1022: Missing or misspelled data type near 'file'
+__wcl__.lnk(4): Error! E1022: Missing or misspelled data type near 'copyfile'
+__wcl__.lnk(4): Error! E1022: Missing or misspelled data type near 'file'
+__wcl__.lnk(5): Error! E1022: Missing or misspelled data type near 'main'
+__wcl__.lnk(5): Error! E1022: Missing or misspelled data type near 'file'
+__wcl__.lnk(5): Warning! W132: No storage class or type specified
+__wcl__.lnk(5): Error! E1009: Expecting ';' but found '.'
+__wcl__.lnk(5): Error! E1061: Expecting data or function declaration, but found '.'
+__wcl__.lnk(6): Error! E1022: Missing or misspelled data type near 'obj'
+__wcl__.lnk(6): Error! E1022: Missing or misspelled data type near 'file'
+__wcl__.lnk(7): Error! E1022: Missing or misspelled data type near 'Makefile'
+__wcl__.lnk(7): Error! E1022: Missing or misspelled data type near 'file'
+__wcl__.lnk(8): Error! E1022: Missing or misspelled data type near 'neofetch'
+__wcl__.lnk(8): Error! E1022: Missing or misspelled data type near 'file'
+__wcl__.lnk(9): Error! E1022: Missing or misspelled data type near 'proto'
+__wcl__.lnk(9): Error! E1022: Missing or misspelled data type near 'file'
+__wcl__.lnk(9): Warning! W132: No storage class or type specified
+__wcl__.lnk(9): Error! E1009: Expecting ';' but found '.'
+__wcl__.lnk(9): Error! E1147: Too many errors: compilation aborted

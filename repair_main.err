@@ -1,0 +1,21 @@
+repair_main.py(2): Error! E1022: Missing or misspelled data type near 'import'
+repair_main.py(4): Error! E1022: Missing or misspelled data type near 'os'
+repair_main.py(4): Error! E1022: Missing or misspelled data type near 'def'
+repair_main.py(4): Error! E1026: Invalid declarator
+repair_main.py(4): Error! E1009: Expecting ',' but found ':'
+repair_main.py(5): Error! E1022: Missing or misspelled data type near 'with'
+repair_main.py(5): Error! E1009: Expecting ')' but found ''main.'
+repair_main.py(5): Error! E1024: Declared symbol 'open' is not in parameter list
+repair_main.py(5): Error! E1009: Expecting ',' but found ''main.'
+repair_main.py(5): Error! E1026: Invalid declarator
+repair_main.py(5): Error! E1009: Expecting ',' but found '.'
+repair_main.py(5): Error! E1024: Declared symbol 'c' is not in parameter list
+repair_main.py(5): Error! E1009: Expecting ',' but found '', ''
+repair_main.py(5): Error! E1024: Declared symbol 'r' is not in parameter list
+repair_main.py(5): Error! E1009: Expecting ',' but found '') as '
+repair_main.py(5): Error! E1024: Declared symbol 'f' is not in parameter list
+repair_main.py(5): Error! E1009: Expecting ',' but found ':'
+repair_main.py(6): Error! E1024: Declared symbol 'lines' is not in parameter list
+repair_main.py(6): Error! E1009: Expecting ',' but found '='
+repair_main.py(6): Error! E1024: Declared symbol 'f' is not in parameter list
+repair_main.py(6): Error! E1147: Too many errors: compilation aborted

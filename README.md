@@ -2,7 +2,7 @@
 
 **Neofetch for DOS** with special support for Tandy 1000 machines!
 
-A system information tool that celebrates the glory days of 16-bit computing, now with **16-color palette display** and **musical Tandy PSG sound**!
+A system information tool that celebrates the glory days of 16-bit computing, now with **16-color palette display**, **musical Tandy PSG sound**, and a suite of **Graphics Demos**!
 
 ## Why Tandy 1000?
 
@@ -12,8 +12,6 @@ The Tandy 1000 (1984-1987) was the unsung hero of home computing - bridging busi
 - **3 tone channels + noise** (Texas Instruments SN76496) vs PC Speaker beeps
 - **320×200 in 16 colors** - Tandy Mode 9 (exclusive!)
 - **PCjr compatibility** - but actually successful!
-
-Hundreds of games supported "Tandy graphics and sound" including King's Quest, Space Quest, Ultima series, and SimCity. This was the machine that made DOS gaming musical! 🎮
 
 ## Features ✨
 
@@ -35,25 +33,42 @@ Hundreds of games supported "Tandy graphics and sound" including King's Quest, S
 - **C Major Triad** - Musical startup sound on Tandy PSG
 - **3-Channel Polyphony** - Full chord (C4 + E4 + G4)
 - **Noise Percussion** - Satisfying "click" using channel 4
-- **Smooth Fade Out** - Professional sound design
 
-*For SepTandy - celebrating all things Tandy!*
+### Graphics Demos 🎮
+Run `dosfetch [mode]` to launch specific demos:
+
+| Mode | Command | Description | Controls |
+|------|---------|-------------|----------|
+| **7** | `dosfetch 7` | **Mode 7 Scaling** (SNES Style) | Arrows to move/rotate |
+| **B** | `dosfetch B` | **Wireframe Cube** | Arrows to rotate, `*`/`/` to scale |
+| **C** | `dosfetch C` | **Parallax Scrolling** | Arrows to scroll |
+| **D** | `dosfetch D` | **Palette Cycling** | Auto-cycling rainbow text |
+| **E** | `dosfetch E` | **Sprite Scaling** | `+`/`-` to scale logo |
+| **F** | `dosfetch F` | **Sprite Collision** | Arrows to move player (Green) |
+| **G** | `dosfetch G` | **Mouse Drawing** | Left Click (Draw), Right Click (Erase) |
+
+*Also supports standard CGA modes (4, 5, 6) and Tandy Low/High Res (8, 10).*
 
 ## Build Instructions
 
-Built with **Open Watcom 1.9**:
+Built with **Open Watcom 1.9**.
 
+**Compile:**
 ```bash
-wmake
+wcc -ml main.c
+wcc -ml tandy_graph.c
 ```
 
-That's it! Produces `neofetch.exe` ready for DOS.
+**Link:**
+```bash
+wlink system dos file main.obj file tandy_graph.obj name dosfetch.exe
+```
 
 ## Usage
 
 Just run it:
 ```
-neofetch.exe
+dosfetch.exe
 ```
 
 On Tandy systems with PSG, you'll hear the C major chord! 🎵
@@ -66,14 +81,12 @@ Uses FLAGS register tests to identify:
 - 80286 (bits 12-15 stuck low)
 - 80386+ (bits 12-15 changeable)
 
-NEC V20/V30 detection uses the SALC instruction (opcode D6h) behavior difference - a documented 1980s technique!
+NEC V20/V30 detection uses the SALC instruction (opcode D6h) behavior difference.
 
-### PSG Sound Synthesis
-- **Clock:** 3.579545 MHz (NTSC)
-- **Formula:** `fout = CLK / (32 * period)`
-- **Timing:** BIOS tick counter (~18.2 Hz)
-
-Based on [psgtest.c](https://github.com/astrobleem/oemsound-tandy) reference implementation.
+### Graphics Engine
+- **Direct Framebuffer Access**: 64KB double-buffered rendering.
+- **Custom Blitters**: Optimized assembly-like C routines for Mode 9 (4-way interleave), Mode 8 (2-way), and Mode 0Ah (2-bit packing).
+- **Fixed-Point Math**: Used for 3D rotations and scaling on integer-only CPUs.
 
 ## Credits
 
@@ -82,16 +95,8 @@ Based on [psgtest.c](https://github.com/astrobleem/oemsound-tandy) reference imp
 - GRAFIX.ASM code by Joseph A. Albrecht
 - Tandy PSG code inspired by [oemsound-tandy](https://github.com/astrobleem/oemsound-tandy)
 
-## Pull Requests Welcome! 🤝
-
-Help make this the ultimate DOS system info tool!
-
----
-
-**Sixteen colors and three sound channels!** The Tandy 1000 way. 🎨🎵
-
 ## Screenshots
 
-![image](https://github.com/user-attachments/assets/bf9bc351-fbba-48cd-8400-fd4231798745)
+![Mode G Proof](/C:/Users/chad/.gemini/antigravity/brain/82635400-fb66-4c8e-b67f-5e1d459a371d/mode_g_proof.png)
 
-![image](https://github.com/user-attachments/assets/9cfceb71-4f2b-4a09-adf6-01eed93f4e96)
+![image](https://github.com/user-attachments/assets/bf9bc351-fbba-48cd-8400-fd4231798745)
